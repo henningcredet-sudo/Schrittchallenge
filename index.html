@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f766e">
+<title>Familien-Schrittchallenge</title>
+<style>
+:root{
+  --bg:#f6f7f4; --card:#ffffff; --ink:#1d2527; --muted:#5d696c; --line:#dfe4e1;
+  --a:#d9480f; --a-soft:#fff0e6; --b:#1971c2; --b-soft:#e7f1fb; --ok:#2b8a3e; --warn:#b7791f;
+  --accent:#0f766e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101617; --card:#182123; --ink:#eef2f1; --muted:#9aa8aa; --line:#2a3639;
+    --a:#ff8a4c; --a-soft:#3a2418; --b:#5aa9f0; --b-soft:#172c40; --ok:#69c97a; --warn:#e5b45a;
+    --accent:#2dd4bf;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 96px}
+header{padding:20px 0 8px}
+h1{font-size:1.5rem;margin:0}
+.sub{color:var(--muted);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+.card h2{font-size:1.05rem;margin:0 0 10px}
+.banner{border-left:4px solid var(--accent);background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:12px 14px;margin:14px 0}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team{border-radius:12px;padding:14px;border:1px solid var(--line)}
+.team.t0{background:var(--a-soft)} .team.t1{background:var(--b-soft)}
+.team .tn{font-weight:700}
+.team.t0 .tn{color:var(--a)} .team.t1 .tn{color:var(--b)}
+.big{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.small{font-size:.82rem;color:var(--muted)}
+.tug{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:14px 0 4px;background:var(--line)}
+.tug div{transition:width .6s}
+.tug .s0{background:var(--a)} .tug .s1{background:var(--b)}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.rank{width:1.6rem;text-align:center;font-weight:700;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.d0{background:var(--a)} .d1{background:var(--b)}
+.bar{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%}
+.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.me{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:8px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+nav button{flex:1;max-width:180px;padding:12px 4px;border:0;background:none;color:var(--muted);font:inherit;font-size:.82rem;cursor:pointer;min-height:48px}
+nav button[aria-selected="true"]{color:var(--accent);font-weight:700;box-shadow:inset 0 3px 0 var(--accent)}
+nav .ic{display:block;font-size:1.25rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;min-height:48px}
+button.primary{width:100%;margin-top:14px;padding:14px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:700;cursor:pointer;min-height:48px}
+@media (prefers-color-scheme: dark){button.primary{color:#06201d}}
+button.link{background:none;border:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer;padding:6px 0}
+.msg{margin-top:10px;font-weight:600}
+.msg.err{color:var(--a)} .msg.good{color:var(--ok)}
+.trophies{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tr{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.tr .e{font-size:1.8rem}
+.tr.off{opacity:.35;filter:grayscale(1)}
+.tr .n{font-weight:700;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:.85rem}
+svg text{fill:var(--muted);font-size:11px}
+.hidden{display:none}
+.demo{background:var(--a-soft);color:var(--a);border-radius:8px;padding:8px 12px;font-size:.85rem;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:6px 4px;border-top:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;border-top:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>👟 Familien-Schrittchallenge</h1>
+    <div class="sub" id="period"></div>
+    <div class="demo hidden" id="demoNote">Demo-Modus: Beispieldaten nur auf diesem Gerät. Zum Echtbetrieb die Web-App-URL in <code>config.js</code> eintragen.</div>
+  </header>
+
+  <main>
+    <section id="tab-stand">
+      <div class="banner" id="daily"></div>
+      <div class="card" id="scoreCard"></div>
+      <div class="card"><h2>Verlauf (Durchschnitt pro Person)</h2><div id="chart"></div></div>
+      <div class="card"><h2>Wochenwertung</h2><div id="weeks"></div></div>
+    </section>
+
+    <section id="tab-enter" class="hidden">
+      <div class="card">
+        <h2>Schritte eintragen</h2>
+        <div id="loginBox">
+          <label for="selName">Wer bist du?</label>
+          <select id="selName"></select>
+          <label for="inPin">Deine PIN (4 Ziffern)</label>
+          <input id="inPin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••">
+        </div>
+        <div id="whoBox" class="hidden"><span id="whoLabel"></span> <button class="link" id="logout">Anderer Name</button></div>
+        <label for="inDate">Tag</label>
+        <select id="inDate"></select>
+        <label for="inSteps">Schritte laut Uhr</label>
+        <input id="inSteps" inputmode="numeric" placeholder="z. B. 8421">
+        <div class="small" id="capNote"></div>
+        <button class="primary" id="save">Speichern</button>
+        <div class="msg" id="saveMsg" role="status"></div>
+      </div>
+      <div class="card" id="myCard"></div>
+    </section>
+
+    <section id="tab-people" class="hidden">
+      <div class="card"><h2>Einzelwertung</h2><div id="board"></div></div>
+      <div class="card"><h2>Tageswerte</h2><div id="grid" style="overflow-x:auto"></div></div>
+    </section>
+
+    <section id="tab-trophy" class="hidden">
+      <div class="card"><h2>Trophäen von <select id="trWho" style="width:auto;display:inline-block;min-height:40px"></select></h2><div class="trophies" id="trophies"></div></div>
+      <div class="card"><h2>Trophäen-Übersicht</h2><div id="trAll"></div></div>
+    </section>
+  </main>
+</div>
+
+<nav role="tablist" aria-label="Bereiche">
+  <button role="tab" data-tab="stand" aria-selected="true"><span class="ic">🏆</span>Stand</button>
+  <button role="tab" data-tab="enter" aria-selected="false"><span class="ic">✍️</span>Eintragen</button>
+  <button role="tab" data-tab="people" aria-selected="false"><span class="ic">👥</span>Einzeln</button>
+  <button role="tab" data-tab="trophy" aria-selected="false"><span class="ic">🎖️</span>Trophäen</button>
+</nav>
+
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+var API = (window.CONFIG && window.CONFIG.API_URL) || '';
+var DEMO = !API;
+var state = null;
+var tab = 'stand';
+
+/* ---------- Hilfen ---------- */
+function $(id){return document.getElementById(id);}
+function esc(s){var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
+function fmt(n){return Math.round(n).toLocaleString('de-DE');}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return ymd(d);}
+function diffDays(a,b){return Math.round((parse(b)-parse(a))/86400000);}
+function dayLabel(s){return parse(s).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'});}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
+
+/* ---------- Daten ---------- */
+function demoState(){
+  var raw=store('demoState');
+  if(raw){try{var s=JSON.parse(raw);s.today=ymd(new Date());return s;}catch(e){}}
+  var today=ymd(new Date()), start=addDays(today,-9);
+  var people=[['Henning','Team Henning'],['Deike','Team Henning'],['Helmut','Team Henning'],['Hilke','Team Hilke'],['Chris','Team Hilke'],['Heiko','Team Hilke'],['Sarah','Team Hilke']];
+  var base={Henning:9500,Deike:8200,Helmut:5200,Hilke:9800,Chris:8800,Heiko:6500,Sarah:7600};
+  var steps=[],seed=7;
+  function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+  for(var i=0;i<9;i++){people.forEach(function(p){
+    if(rnd()<0.08)return;
+    steps.push({date:addDays(start,i),name:p[0],steps:Math.round(base[p[0]]*(0.65+rnd()*0.7))});
+  });}
+  var s={ok:true,today:today,config:{start:start,ende:addDays(start,29),deckel:30000,rueckwirkend:3},
+    people:people.map(function(p){return{name:p[0],team:p[1]};}),steps:steps};
+  store('demoState',JSON.stringify(s));
+  return s;
+}
+function load(){
+  if(DEMO){state=demoState();render();return Promise.resolve();}
+  return fetch(API).then(function(r){return r.json();}).then(function(s){
+    if(s&&s.ok){state=s;render();}
+  }).catch(function(){ if(!state){$('daily').textContent='Daten konnten nicht geladen werden. Bitte später erneut versuchen.';} });
+}
+function save(name,pin,date,steps){
+  if(DEMO){
+    var s=demoState(),found=false;
+    s.steps.forEach(function(x){if(x.name===name&&x.date===date){x.steps=steps;found=true;}});
+    if(!found)s.steps.push({date:date,name:name,steps:steps});
+    store('demoState',JSON.stringify(s));
+    return Promise.resolve(s);
+  }
+  return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({name:name,pin:pin,date:date,steps:steps})}).then(function(r){return r.json();});
+}
+
+/* ---------- Berechnung ---------- */
+function calc(){
+  var cfg=state.config, cap=cfg.deckel, today=state.today;
+  var last=today<cfg.ende?today:cfg.ende;
+  var started=today>=cfg.start;
+  var teams=[];
+  state.people.forEach(function(p){if(teams.indexOf(p.team)<0)teams.push(p.team);});
+  var byPerson={};
+  state.people.forEach(function(p){byPerson[p.name]={};});
+  state.steps.forEach(function(x){if(byPerson[x.name])byPerson[x.name][x.date]=x.steps;});
+  function cappedDay(name,d){var v=byPerson[name][d];return v==null?0:Math.min(v,cap);}
+  var days=[];
+  if(started){for(var d=cfg.start;d<=last;d=addDays(d,1))days.push(d);}
+  var persons=state.people.map(function(p){
+    var total=0,raw=0,entries=0,best=0;
+    days.forEach(function(d){
+      var v=byPerson[p.name][d];
+      if(v!=null){entries++;raw+=v;if(v>best)best=v;}
+      total+=cappedDay(p.name,d);
+    });
+    return {name:p.name,team:p.team,ti:teams.indexOf(p.team),total:total,raw:raw,entries:entries,best:best,
+      avg:entries?raw/entries:0};
+  });
+  var teamData=teams.map(function(t,i){
+    var members=persons.filter(function(p){return p.team===t;});
+    var sum=members.reduce(function(a,p){return a+p.total;},0);
+    var series=days.map(function(d,k){
+      var s=0;members.forEach(function(m){for(var j=0;j<=k;j++)s+=cappedDay(m.name,days[j]);});
+      return members.length?s/members.length:0;
+    });
+    return {name:t,i:i,members:members,sum:sum,avg:members.length?sum/members.length:0,series:series};
+  });
+  return {cfg:cfg,days:days,teams:teamData,persons:persons,byPerson:byPerson,cap:cap,last:last,started:started,cappedDay:cappedDay};
+}
+
+/* ---------- Texte ---------- */
+var QUOTES=[
+ 'Jeder Schritt zählt – auch der zum Kühlschrank. Aber der Umweg über den Park zählt mehr.',
+ 'Heute schon spaziert? Das andere Team schläft nicht.',
+ 'Kleine Runde nach dem Essen: Macht ca. 1.500 Schritte und gute Laune.',
+ 'Telefonieren? Dann im Gehen.',
+ 'Treppe statt Aufzug – bringt Punkte für die Familienehre.',
+ 'Wer sich heute zum Spaziergang überwindet, ist morgen stolz.',
+ 'Auch ein ruhiger Tag ist ein Tag: lieber 5.000 als 0.',
+ 'Zusammen gehen macht mehr Spaß als alleine – ruf jemanden aus dem Team an.',
+ 'Dranbleiben schlägt Rekorde: Regelmäßigkeit gewinnt den Monat.',
+ 'Rücken ernst nehmen: lieber mehrere kurze Runden als eine Gewalttour.'
+];
+function dailyMessage(c){
+  if(!c.started)return 'Los geht\'s am '+dayLabel(c.cfg.start)+'. Schuhe bereitstellen, Uhr laden!';
+  if(state.today>c.cfg.ende)return 'Die Challenge ist vorbei. Glückwunsch an alle – ihr seid ein Monat lang gelaufen!';
+  var q=QUOTES[(diffDays(c.cfg.start,state.today)+state.today.length)%QUOTES.length];
+  var t=c.teams;
+  if(t.length==2&&(t[0].avg+t[1].avg)>0){
+    var lead=t[0].avg>=t[1].avg?t[0]:t[1], trail=lead===t[0]?t[1]:t[0];
+    var gap=lead.avg-trail.avg;
+    if(gap<lead.avg*0.03+200)return '⚡ Kopf-an-Kopf-Rennen! Nur '+fmt(gap)+' Schritte pro Person trennen '+esc(t[0].name)+' und '+esc(t[1].name)+'. '+q;
+    return '🔥 '+esc(lead.name)+' führt mit '+fmt(gap)+' Schritten pro Person. '+esc(trail.name)+', da geht noch was! '+q;
+  }
+  return q;
+}
+
+/* ---------- Anzeige ---------- */
+function render(){
+  if(!state)return;
+  var c=calc();
+  $('demoNote').classList.toggle('hidden',!DEMO);
+  var left=diffDays(state.today,c.cfg.ende);
+  $('period').textContent=dayLabel(c.cfg.start)+' bis '+dayLabel(c.cfg.ende)+(c.started&&left>=0?' · noch '+(left+1)+' Tage':'');
+  $('daily').innerHTML=dailyMessage(c);
+  renderScore(c);renderChart(c);renderWeeks(c);renderBoard(c);renderGrid(c);renderEnter(c);renderTrophies(c);
+}
+
+function renderScore(c){
+  var t=c.teams;
+  if(t.length<2){$('scoreCard').innerHTML='<h2>Teamstand</h2><div class="small">Noch keine zwei Teams eingerichtet.</div>';return;}
+  var tot=t[0].avg+t[1].avg, p0=tot?t[0].avg/tot*100:50;
+  var html='<h2>Teamstand (Ø pro Person)</h2><div class="teams">';
+  t.forEach(function(x){
+    html+='<div class="team t'+x.i+'"><div class="tn">'+esc(x.name)+'</div><div class="big">'+fmt(x.avg)+'</div>'+
+      '<div class="small">'+x.members.length+' Personen · gesamt '+fmt(x.sum)+'</div></div>';
+  });
+  html+='</div><div class="tug" aria-hidden="true"><div class="s0" style="width:'+p0+'%"></div><div class="s1" style="width:'+(100-p0)+'%"></div></div>';
+  html+='<div class="small">Gewertet werden höchstens '+fmt(c.cap)+' Schritte pro Person und Tag. Fehlende Tage zählen 0.</div>';
+  $('scoreCard').innerHTML=html;
+}
+
+function renderChart(c){
+  var n=Math.max(2,diffDays(c.cfg.start,c.cfg.ende)+1);
+  if(!c.days.length){$('chart').innerHTML='<div class="small">Noch keine Daten.</div>';return;}
+  var W=600,H=220,L=44,R=12,T=10,B=24;
+  var max=1;c.teams.forEach(function(t){t.series.forEach(function(v){if(v>max)max=v;});});
+  var step=Math.pow(10,Math.floor(Math.log10(max)));max=Math.ceil(max/step)*step;
+  function x(i){return L+(W-L-R)*i/(n-1);} function y(v){return T+(H-T-B)*(1-v/max);}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Verlauf des Durchschnitts pro Person je Team">';
+  for(var g=0;g<=4;g++){var gv=max*g/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" text-anchor="end">'+fmt(gv)+'</text>';}
+  [0,Math.floor((n-1)/2),n-1].forEach(function(i){s+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle">'+parse(addDays(c.cfg.start,i)).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+'</text>';});
+  c.teams.forEach(function(t){
+    var col=t.i?'var(--b)':'var(--a)';
+    var pts=t.series.map(function(v,i){return x(i)+','+y(v);}).join(' ');
+    s+='<polyline fill="none" stroke="'+col+'" stroke-width="3" stroke-linejoin="round" points="'+pts+'"/>';
+    var k=t.series.length-1;s+='<circle cx="'+x(k)+'" cy="'+y(t.series[k])+'" r="5" fill="'+col+'"/>';
+  });
+  s+='</svg><div class="chips">'+c.teams.map(function(t){return '<span class="chip"><span class="dot d'+t.i+'" style="display:inline-block"></span> '+esc(t.name)+'</span>';}).join('')+'</div>';
+  $('chart').innerHTML=s;
+}
+
+function renderWeeks(c){
+  if(!c.started){$('weeks').innerHTML='<div class="small">Startet mit der Challenge.</div>';return;}
+  var html='<table><tr><th>Woche</th>'+c.teams.map(function(t){return '<th>'+esc(t.name)+'</th>';}).join('')+'<th>Sieger</th></tr>';
+  var nW=Math.ceil(c.days.length/7);
+  for(var w=0;w<nW;w++){
+    var ds=c.days.slice(w*7,w*7+7), done=ds.length===7||c.last===c.cfg.ende;
+    var vals=c.teams.map(function(t){
+      var s=0;t.members.forEach(function(m){ds.forEach(function(d){s+=c.cappedDay(m.name,d);});});
+      return t.members.length?s/t.members.length:0;
+    });
+    var win='läuft …';
+    if(done&&c.teams.length===2){win=vals[0]===vals[1]?'Unentschieden':esc(c.teams[vals[0]>vals[1]?0:1].name);}
+    else if(!done&&c.teams.length===2){win='<span class="small">vorn: '+esc(c.teams[vals[0]>=vals[1]?0:1].name)+'</span>';}
+    html+='<tr><td>W'+(w+1)+'</td>'+vals.map(function(v){return '<td>'+fmt(v)+'</td>';}).join('')+'<td>'+win+'</td></tr>';
+  }
+  $('weeks').innerHTML=html+'</table>';
+}
+
+function renderBoard(c){
+  var sorted=c.persons.slice().sort(function(a,b){return b.total-a.total;});
+  var max=Math.max(1,sorted.length?sorted[0].total:1), me=store('who');
+  var html='';
+  sorted.forEach(function(p,i){
+    html+='<div class="row'+(p.name===me?' me':'')+'"><div class="rank">'+(i===0&&p.total>0?'🥇':i+1)+'</div><span class="dot d'+p.ti+'"></span><div style="flex:1;min-width:0"><div>'+esc(p.name)+
+      ' <span class="small">Ø '+fmt(p.avg)+' · Bestwert '+fmt(p.best)+'</span></div><div class="bar"><i style="width:'+(p.total/max*100)+'%;background:var(--'+(p.ti?'b':'a')+')"></i></div></div><div class="num">'+fmt(p.total)+'</div></div>';
+  });
+  $('board').innerHTML=html||'<div class="small">Noch keine Daten.</div>';
+}
+
+function renderGrid(c){
+  if(!c.days.length){$('grid').innerHTML='<div class="small">Noch keine Tage.</div>';return;}
+  var days=c.days.slice(-7).reverse();
+  var html='<table><tr><th>Name</th>'+days.map(function(d){return '<th>'+parse(d).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit'})+'</th>';}).join('')+'</tr>';
+  c.persons.forEach(function(p){
+    html+='<tr><td>'+esc(p.name)+'</td>'+days.map(function(d){var v=c.byPerson[p.name][d];return '<td>'+(v==null?'–':fmt(v))+'</td>';}).join('')+'</tr>';
+  });
+  $('grid').innerHTML=html+'</table><div class="small">Letzte 7 Tage, neueste links.</div>';
+}
+
+function renderEnter(c){
+  var sel=$('selName'),cur=store('who');
+  if(!sel.options.length){state.people.forEach(function(p){var o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o);});}
+  var logged=cur&&state.people.some(function(p){return p.name===cur;})&&(DEMO||store('pin'));
+  $('loginBox').classList.toggle('hidden',!!logged);
+  $('whoBox').classList.toggle('hidden',!logged);
+  if(logged)$('whoLabel').innerHTML='Angemeldet als <b>'+esc(cur)+'</b>.';
+  var dsel=$('inDate'),keep=dsel.value;dsel.innerHTML='';
+  for(var i=0;i<=c.cfg.rueckwirkend;i++){
+    var d=addDays(state.today,-i);
+    if(d<c.cfg.start||d>c.cfg.ende)continue;
+    var o=document.createElement('option');o.value=d;o.textContent=(i===0?'Heute, ':i===1?'Gestern, ':'')+dayLabel(d);dsel.appendChild(o);
+  }
+  if(keep)dsel.value=keep;
+  if(!dsel.options.length){var o2=document.createElement('option');o2.textContent=c.started?'Challenge beendet':'Challenge startet am '+dayLabel(c.cfg.start);dsel.appendChild(o2);}
+  $('capNote').textContent='Es zählen höchstens '+fmt(c.cap)+' Schritte pro Tag. Nachtragen geht bis '+c.cfg.rueckwirkend+' Tage zurück. Erneutes Speichern überschreibt den Wert.';
+  var mine=cur&&c.persons.filter(function(p){return p.name===cur;})[0];
+  if(mine&&c.started){
+    var mt=c.teams[mine.ti], rank=c.persons.slice().sort(function(a,b){return b.total-a.total;}).map(function(p){return p.name;}).indexOf(cur)+1;
+    var today=c.byPerson[cur][state.today];
+    $('myCard').innerHTML='<h2>Dein Stand, '+esc(cur)+'</h2><div class="big">'+fmt(mine.total)+'</div><div class="small">Schritte gesamt · Platz '+rank+' von '+c.persons.length+' · '+esc(mt?mt.name:'')+'</div>'+
+      '<div class="chips"><span class="chip">Ø '+fmt(mine.avg)+' pro Eintrag</span><span class="chip">Bestwert '+fmt(mine.best)+'</span><span class="chip">Heute: '+(today==null?'noch nichts':fmt(today))+'</span></div>';
+  }else{$('myCard').innerHTML='';}
+}
+
+/* ---------- Trophäen ---------- */
+var TROPHIES=[
+ {id:'first',e:'👟',n:'Erster Schritt',d:'Ersten Wert eingetragen',f:function(p){return p.entries>=1;}},
+ {id:'t10',e:'🔟',n:'10.000er',d:'Ein Tag mit 10.000+',f:function(p){return p.best>=10000;}},
+ {id:'t15',e:'💪',n:'15.000er',d:'Ein Tag mit 15.000+',f:function(p){return p.best>=15000;}},
+ {id:'t20',e:'🚀',n:'20.000er',d:'Ein Tag mit 20.000+',f:function(p){return p.best>=20000;}},
+ {id:'s7',e:'🔥',n:'Wochenserie',d:'7 Tage in Folge eingetragen',f:function(p,c){return streak(p,c)>=7;}},
+ {id:'s14',e:'🌋',n:'Zweiwochenserie',d:'14 Tage in Folge eingetragen',f:function(p,c){return streak(p,c)>=14;}},
+ {id:'k100',e:'🥉',n:'100.000',d:'100.000 Schritte gesamt',f:function(p){return p.total>=100000;}},
+ {id:'k200',e:'🥈',n:'200.000',d:'200.000 Schritte gesamt',f:function(p){return p.total>=200000;}},
+ {id:'k300',e:'🥇',n:'300.000',d:'300.000 Schritte gesamt',f:function(p){return p.total>=300000;}},
+ {id:'day',e:'👑',n:'Tagessieger',d:'Mindestens einmal Tagesbester der Familie',f:function(p,c){return c.days.some(function(d){var m=0,w=null;c.persons.forEach(function(q){var v=c.byPerson[q.name][d];if(v!=null&&v>m){m=v;w=q.name;}});return w===p.name;});}},
+ {id:'boost',e:'📈',n:'Überflieger',d:'Tag mit 150 % des eigenen Schnitts (ab 5 Einträgen)',f:function(p,c){if(p.entries<5)return false;return c.days.some(function(d){var v=c.byPerson[p.name][d];return v!=null&&v>=p.avg*1.5;});}},
+ {id:'full',e:'🧱',n:'Lückenlos',d:'Jeden bisherigen Tag eingetragen (ab 7 Tagen)',f:function(p,c){return c.days.length>=7&&p.entries===c.days.length;}}
+];
+function streak(p,c){var best=0,cur=0;c.days.forEach(function(d){if(c.byPerson[p.name][d]!=null){cur++;if(cur>best)best=cur;}else cur=0;});return best;}
+function earned(p,c){return TROPHIES.filter(function(t){return t.f(p,c);}).map(function(t){return t.id;});}
+
+function renderTrophies(c){
+  var sel=$('trWho');
+  if(!sel.options.length){state.people.forEach(function(p){var o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o);});var who=store('who');if(who)sel.value=who;}
+  var p=c.persons.filter(function(x){return x.name===sel.value;})[0]||c.persons[0];
+  if(!p)return;
+  var got=earned(p,c);
+  $('trophies').innerHTML=TROPHIES.map(function(t){
+    return '<div class="tr'+(got.indexOf(t.id)<0?' off':'')+'"><div class="e">'+t.e+'</div><div class="n">'+t.n+'</div><div class="small">'+t.d+'</div></div>';
+  }).join('');
+  $('trAll').innerHTML=c.persons.map(function(q){
+    var g=earned(q,c);
+    return '<div class="row"><span class="dot d'+q.ti+'"></span><div style="flex:1">'+esc(q.name)+'</div><div>'+(g.length?TROPHIES.filter(function(t){return g.indexOf(t.id)>=0;}).map(function(t){return t.e;}).join(' '):'<span class="small">noch keine</span>')+'</div></div>';
+  }).join('');
+}
+
+/* ---------- Ereignisse ---------- */
+document.querySelectorAll('nav button').forEach(function(b){
+  b.addEventListener('click',function(){
+    tab=b.getAttribute('data-tab');
+    document.querySelectorAll('nav button').forEach(function(x){x.setAttribute('aria-selected',String(x===b));});
+    ['stand','enter','people','trophy'].forEach(function(t){$('tab-'+t).classList.toggle('hidden',t!==tab);});
+    window.scrollTo(0,0);
+  });
+});
+$('trWho').addEventListener('change',function(){if(state)renderTrophies(calc());});
+$('logout').addEventListener('click',function(){store('who',null);store('pin',null);if(state)renderEnter(calc());});
+$('save').addEventListener('click',function(){
+  var msg=$('saveMsg');msg.className='msg';msg.textContent='';
+  var name=store('who')||$('selName').value, pin=store('pin')||$('inPin').value.trim();
+  var date=$('inDate').value, raw=$('inSteps').value.replace(/[.\s']/g,'');
+  var steps=Number(raw);
+  if(!name){msg.className='msg err';msg.textContent='Bitte Namen wählen.';return;}
+  if(!DEMO&&!pin){msg.className='msg err';msg.textContent='Bitte PIN eingeben.';return;}
+  if(!/^\d+$/.test(raw)||steps>100000){msg.className='msg err';msg.textContent='Bitte eine Schrittzahl zwischen 0 und 100.000 eingeben.';return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){msg.className='msg err';msg.textContent='Kein gültiger Tag auswählbar.';return;}
+  $('save').disabled=true;msg.textContent='Speichere …';
+  save(name,pin,date,steps).then(function(res){
+    $('save').disabled=false;
+    if(res&&res.ok){
+      store('who',name);store('pin',pin);state=res;$('inSteps').value='';$('inPin').value='';
+      var c=calc();
+      msg.className='msg good';
+      msg.textContent=steps>=c.cap?'Gespeichert! Über '+fmt(c.cap)+' Schritte zählen nicht mehr – schon deinen Rücken. 😉':
+        steps>=10000?'Gespeichert – starke '+fmt(steps)+' Schritte! 🎉':'Gespeichert: '+fmt(steps)+' Schritte. Jeder Schritt hilft dem Team.';
+      render();
+    }else{
+      msg.className='msg err';msg.textContent=(res&&res.error)||'Das hat nicht geklappt.';
+      if(res&&/PIN/.test(res.error||'')){store('pin',null);}
+    }
+  }).catch(function(){$('save').disabled=false;msg.className='msg err';msg.textContent='Keine Verbindung. Bitte erneut versuchen.';});
+});
+
+load();
+setInterval(function(){if(!document.hidden)load();},60000);
+})();
+</script>
+</body>
+</html>
