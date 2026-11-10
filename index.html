@@ -84,7 +84,7 @@ th{color:var(--muted);font-weight:600;border-top:0}
     <section id="tab-stand">
       <div class="banner" id="daily"></div>
       <div class="card" id="scoreCard"></div>
-      <div class="card"><h2>Verlauf (Durchschnitt pro Person)</h2><div id="chart"></div></div>
+      <div class="card"><h2>Verlauf (Gesamtschritte)</h2><div id="chart"></div></div>
       <div class="card"><h2>Wochenwertung</h2><div id="weeks"></div></div>
     </section>
 
@@ -212,9 +212,10 @@ function calc(){
     var sum=members.reduce(function(a,p){return a+p.total;},0);
     var series=days.map(function(d,k){
       var s=0;members.forEach(function(m){for(var j=0;j<=k;j++)s+=cappedDay(m.name,days[j]);});
-      return members.length?s/members.length:0;
+      return s;
     });
-    return {name:t,i:i,members:members,sum:sum,avg:members.length?sum/members.length:0,series:series};
+    var avg=members.length?sum/members.length:0;
+    return {name:t,i:i,members:members,sum:sum,avg:avg,dayAvg:days.length?avg/days.length:0,series:series};
   });
   return {cfg:cfg,days:days,teams:teamData,persons:persons,byPerson:byPerson,cap:cap,last:last,started:started,cappedDay:cappedDay};
 }
@@ -261,10 +262,10 @@ function renderScore(c){
   var t=c.teams;
   if(t.length<2){$('scoreCard').innerHTML='<h2>Teamstand</h2><div class="small">Noch keine zwei Teams eingerichtet.</div>';return;}
   var tot=t[0].avg+t[1].avg, p0=tot?t[0].avg/tot*100:50;
-  var html='<h2>Teamstand (Ø pro Person)</h2><div class="teams">';
+  var html='<h2>Teamstand (Tagesdurchschnitt pro Person)</h2><div class="teams">';
   t.forEach(function(x){
-    html+='<div class="team t'+x.i+'"><div class="tn">'+esc(x.name)+'</div><div class="big">'+fmt(x.avg)+'</div>'+
-      '<div class="small">'+x.members.length+' Personen · gesamt '+fmt(x.sum)+'</div></div>';
+    html+='<div class="team t'+x.i+'"><div class="tn">'+esc(x.name)+'</div><div class="big">'+fmt(x.dayAvg)+'</div>'+
+      '<div class="small">'+x.members.length+' Personen · pro Tag und Person · gesamt '+fmt(x.sum)+'</div></div>';
   });
   html+='</div><div class="tug" aria-hidden="true"><div class="s0" style="width:'+p0+'%"></div><div class="s1" style="width:'+(100-p0)+'%"></div></div>';
   html+='<div class="small">Gewertet werden höchstens '+fmt(c.cap)+' Schritte pro Person und Tag. Fehlende Tage zählen 0.</div>';
@@ -278,7 +279,7 @@ function renderChart(c){
   var max=1;c.teams.forEach(function(t){t.series.forEach(function(v){if(v>max)max=v;});});
   var step=Math.pow(10,Math.floor(Math.log10(max)));max=Math.ceil(max/step)*step;
   function x(i){return L+(W-L-R)*i/(n-1);} function y(v){return T+(H-T-B)*(1-v/max);}
-  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Verlauf des Durchschnitts pro Person je Team">';
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Verlauf der Gesamtschritte je Team">';
   for(var g=0;g<=4;g++){var gv=max*g/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(gv)+'" y2="'+y(gv)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y(gv)+4)+'" text-anchor="end">'+fmt(gv)+'</text>';}
   [0,Math.floor((n-1)/2),n-1].forEach(function(i){s+='<text x="'+x(i)+'" y="'+(H-6)+'" text-anchor="middle">'+parse(addDays(c.cfg.start,i)).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+'</text>';});
   c.teams.forEach(function(t){
